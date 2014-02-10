@@ -26,3 +26,7 @@ let unit = { x = 1.0; y = 1.0 }
 
 let zero = 0.0 *~ unit
 
+let magnitude v = (v.x *. v.x) +. (v.y *. v.y)
+let length v = hypot v.x v.y
+
+

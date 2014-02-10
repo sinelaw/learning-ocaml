@@ -51,3 +51,4 @@ Graphics.auto_synchronize false;
 printf "Simulating...\n" ;;
 run objs;;
 printf "Bye!\n";;
+
