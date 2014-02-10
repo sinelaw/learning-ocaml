@@ -1,6 +1,4 @@
-
-(*open Graphics;;*)
-
+open Printf
 open Mass
 open Vector
 
@@ -14,36 +12,42 @@ let simulation_dt = 0.02
 let force_strength = 30.0
 let center = 0.5 *~ screen_size
 
-let do_objs f objs = ignore (List.map f objs)
-
 let rec delay duration =
   try
     Thread.delay duration
-  with Unix.Unix_error (Unix.EAGAIN, _, _) -> delay duration
+  with _ -> delay duration
+
+let draw_world os = 
+  Graphics.clear_graph ();
+  List.map draw os |> ignore;
+  Graphics.synchronize ()
+
+(* Simulate a constant pull toward the center *)
+let force o = (force_strength *. 1.0 /. o.size) *~ (center -~ o.position)
+let simulate_force o = simulate (force o) simulation_dt o
 
 let rec run objs =
-  let step os = 
-    Graphics.auto_synchronize false;
-    Graphics.clear_graph ();
-    do_objs draw os;
-    Graphics.auto_synchronize true
-    (* do_objs print_obj os; *)
-  in
-  let force o = (force_strength *. 1.0 /. o.size) *~ ((-1.0 *~ o.position) +~ center)
-  in
-  let objs' = List.map (fun o -> simulate (force o) simulation_dt o) objs
-  in
+  let objs' = List.map simulate_force objs in
   delay simulation_dt;
-  step objs';
-  run objs'
+  draw_world objs';
+  Graphics.wait_next_event [Poll]
+  |> (fun status -> if status.Graphics.keypressed
+                    then ()
+                    else run objs')
+
 
 let rec repeat f x = function
   | 0 -> []
   | n -> (f x) :: (repeat f x (n-1))
+
+let num_objs = 10
+
+let objs = repeat (fun _ -> Mass.random screen_bound velocity_bound size_bound) () num_objs
+
 ;;
-
-let objs = repeat (fun _ -> Mass.random screen_bound velocity_bound size_bound) () 1000000;;
-
-
-Graphics.open_graph " 800x600 ";;
+Graphics.open_graph "";;
+Graphics.resize_window max_x max_y;;
+Graphics.auto_synchronize false;
+printf "Simulating...\n" ;;
 run objs;;
+printf "Bye!\n";;
