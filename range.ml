@@ -1,7 +1,7 @@
 
-module Range = struct
-  type 'a t = 
+type 'a t = 
     { min : 'a;
       max : 'a
     }
-end   
+
+let range min max = { min ; max }
